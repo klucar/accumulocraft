@@ -1,0 +1,14 @@
+banned-ips.json
+banned-players.json
+config/
+dumps/
+lib/
+logs/
+minecraft_server.1.8.jar
+mods/
+ops.json
+server.properties
+spongevanilla-1.8-2.1-DEV-91.jar
+usercache.json
+whitelist.json
+world/
