@@ -2,7 +2,7 @@
 
 ## Why
 
-We want to be cool like all the other kids.
+Accumulo + Minecraft = More awesome than the [Accumulo Monitor](https://accumulo.apache.org/screenshots.html)
 
 ## Compile
 
