@@ -9,7 +9,7 @@ Accumulo + Minecraft = More awesome than the [Accumulo Monitor](https://accumulo
 Compile the Accumulocraft plugin using Maven
 
 ```
-mvn install
+mvn package
 ```
 
 ## Server
