@@ -1,14 +1,14 @@
 package io.github.klucar.accumulocraft;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import io.github.klucar.accumulocraft.command.TablesCommand;
 import io.github.klucar.accumulocraft.command.TipCommand;
-import ninja.leaping.configurate.commented.CommentedConfigurationNode;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
+import io.github.klucar.accumulocraft.guice.AccumulocraftModule;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.command.CommandManager;
 import org.spongepowered.api.command.spec.CommandSpec;
-import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
@@ -24,33 +24,35 @@ import org.spongepowered.api.text.Texts;
 @Plugin(id = PomData.ARTIFACT_ID, name = PomData.NAME, version = PomData.VERSION)
 public class AccumulocraftPlugin {
 
-
   @Inject
   private Logger logger;
-
-  // Give us a configuration to work from
-  @Inject
-  @DefaultConfig(sharedRoot = true)
-  private ConfigurationLoader<CommentedConfigurationNode> configLoader;
 
   @Inject
   private Game game;
 
+  @Inject
+  Injector injector;
+
+  @Inject
+  private Configuration config;
 
   @Listener
   public void onPreInit(GamePreInitializationEvent event) {
+    logger.info("Pre-Init");
+    injector.createChildInjector(new AccumulocraftModule());
+    config.initialize();
     configureCommands();
   }
 
   @Listener
   public void onInit(GameInitializationEvent event) {
-
+    logger.info("Init");
   }
 
   @Listener
   public void onServerStarting(GameStartingServerEvent event) {
     // Perform initialization tasks here
-
+    logger.info("Server Starting");
   }
 
   @Listener
@@ -58,12 +60,20 @@ public class AccumulocraftPlugin {
     // Hey! The server has started!
     // Try instantiating your logger in here.
     // (There's a guide for that)
-    logger.info("Server is starting.");
+    logger.info("Server Start");
   }
 
   @Listener
   public void disable(GameStoppingServerEvent event) {
+    logger.info("Plugin disable");
     // Perform shutdown tasks here
+    if( config.isMiniCluster() ){
+      try {
+        config.shutdownMiniCluster();
+      } catch (Exception e) {
+        logger.error("Problem shutting down mini accumulo cluster");
+      }
+    }
     logger.info("Server shutting down");
   }
 
@@ -74,11 +84,17 @@ public class AccumulocraftPlugin {
     // Perform initialization tasks here
     CommandSpec tipCommandSpec = CommandSpec.builder()
       .description(Texts.of("Get a random tip."))
-      .permission("accumulocraft.command.tip")
       .executor(new TipCommand())
       .build();
 
     mgr.register(this, tipCommandSpec, "tip", "tip", "tip");
+
+    CommandSpec tablesCommandSpec = CommandSpec.builder()
+      .description(Texts.of("Display Accumulo Tables"))
+      .executor(new TablesCommand())
+      .build();
+
+    mgr.register(this, tablesCommandSpec, "tables", "tables", "tables");
 
   }
 

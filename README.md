@@ -40,6 +40,18 @@ Link the plugin jar into the server mods directory
 ln -s target/accumulocraft-1.0-SNAPSHOT.jar servers/spongevanilla/mods/accumulocraft-1.0-SNAPSHOT.jar
 ```
 
+Add a config file to servers/spongevanilla/config/accumulocraft/accumulocraft.conf
+
+```
+accumulocraft {
+  minicluster=true
+  zk_hosts="localhost:2181"
+  instance=accumulocraft
+  username=root
+  password=secret
+}
+```
+
 ## Client
 
 The official [Minecraft client](https://minecraft.net/download) will work. You'll need
