@@ -1,11 +1,10 @@
 package io.github.klucar.accumulocraft;
 
 import com.google.inject.Inject;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.apache.accumulo.minicluster.MiniAccumuloCluster;
 import org.apache.accumulo.minicluster.MiniAccumuloConfig;
@@ -15,11 +14,11 @@ import org.spongepowered.api.config.DefaultConfig;
 public class Configuration {
 
 
-  public static final String MINICLUSTER_NODE = "minicluster";
-  public static final String ZK_NODE = "accumulocraft.zk_hosts";
-  public static final String INSTANCE_NODE = "accumulocraft.instance";
-  public static final String USERNAME_NODE = "accumulocraft.username";
-  public static final String PASSWORD_NODE = "accumulocraft.password";
+  public static final String[] MINICLUSTER_NODE = {"accumulocraft","minicluster"};
+  public static final String[] ZK_NODE = {"accumulocraft","zk_hosts"};
+  public static final String[] INSTANCE_NODE = {"accumulocraft","instance"};
+  public static final String[] USERNAME_NODE = {"accumulocraft","username"};
+  public static final String[] PASSWORD_NODE = {"accumulocraft","password"};
 
   public static final String ZK_DEFAULT = "localhost:2181";
   public static final String INSTANCE_DEFAULT = "accumulocraft";
@@ -34,9 +33,9 @@ public class Configuration {
   @DefaultConfig(sharedRoot = false)
   private ConfigurationLoader<CommentedConfigurationNode> configManager;
 
-  @Inject
-  @DefaultConfig(sharedRoot = false)
-  private Path defaultConfig;
+  //@Inject
+  //@DefaultConfig(sharedRoot = false)
+  //private Path defaultConfig;
 
   private String instance;
   private String zkServers;
@@ -51,8 +50,7 @@ public class Configuration {
     try {
       logger.info("Initializing Configuration");
       // Load the config files
-      //CommentedConfigurationNode config = configManager.load();
-      CommentedConfigurationNode config = HoconConfigurationLoader.builder().setPath(defaultConfig.toAbsolutePath()).build().load();
+      CommentedConfigurationNode config = configManager.load();
       logger.info("config: {}", config);
       this.setZkServers(config.getNode(ZK_NODE).getString(ZK_DEFAULT));
       this.setInstance(config.getNode(INSTANCE_NODE).getString(INSTANCE_DEFAULT));
@@ -63,8 +61,9 @@ public class Configuration {
       logger.info("minicluster: {}", config.getNode(MINICLUSTER_NODE).getBoolean());
       if( config.getNode(MINICLUSTER_NODE).getBoolean() ){
         logger.info("Starting MiniAccumuloCluster");
-        MiniAccumuloConfig miniConfig = new MiniAccumuloConfig(Files.createTempDirectory("miniaccumulocraft",null).toFile(),
-                                                               this.getPassword());
+        File tempFile = Files.createTempDirectory("miniaccumulocraft").toFile();
+        logger.info("tempFile: {}", tempFile);
+        MiniAccumuloConfig miniConfig = new MiniAccumuloConfig(tempFile, this.getPassword());
         miniConfig.setInstanceName(this.getInstance());
         MiniAccumuloCluster cluster = new MiniAccumuloCluster(miniConfig);
         cluster.start();
@@ -81,7 +80,7 @@ public class Configuration {
       throw new RuntimeException(e);
     }
 
-    logger.info("Default Configuration File: {}", defaultConfig.toAbsolutePath());
+    //logger.info("Default Configuration File: {}", defaultConfig.toAbsolutePath());
   }
 
   public String getInstance(){
