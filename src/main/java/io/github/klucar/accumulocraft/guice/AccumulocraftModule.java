@@ -16,15 +16,15 @@ public class AccumulocraftModule extends AbstractModule {
   private Configuration config = null;
   private Instance instance;
 
-  public AccumulocraftModule(){
-
+  public AccumulocraftModule(Configuration config){
+    this.config = config;
   }
 
   @Override
   protected void configure() {
   }
 
-/*  @Provides
+  @Provides
   Configuration provideConfiguration(){
     if ( null == this.config ){
       this.config = new Configuration();
@@ -32,7 +32,6 @@ public class AccumulocraftModule extends AbstractModule {
     }
     return this.config;
   }
-*/
 
   @Provides
   Instance provideInstance(){
@@ -46,7 +45,7 @@ public class AccumulocraftModule extends AbstractModule {
   Connector provideConnector() {
     Connector connector = null;
     try {
-      connector = instance.getConnector(config.getUsername(), new PasswordToken(config.getPassword()));
+      connector = provideInstance().getConnector(config.getUsername(), new PasswordToken(config.getPassword()));
     } catch (AccumuloSecurityException e) {
       throw new RuntimeException("Accumulo Security Exception Occurred", e);
     } catch (AccumuloException e) {

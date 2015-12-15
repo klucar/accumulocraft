@@ -33,13 +33,14 @@ public class AccumulocraftPlugin {
   @Inject
   Injector injector;
 
-  @Inject
   private Configuration config;
 
   @Listener
   public void onPreInit(GamePreInitializationEvent event) {
     logger.info("Pre-Init");
-    injector.createChildInjector(new AccumulocraftModule());
+    config = new Configuration();
+    injector.injectMembers(config);
+    injector.createChildInjector(new AccumulocraftModule(config));
     config.initialize();
     configureCommands();
   }

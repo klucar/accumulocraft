@@ -33,10 +33,6 @@ public class Configuration {
   @DefaultConfig(sharedRoot = false)
   private ConfigurationLoader<CommentedConfigurationNode> configManager;
 
-  //@Inject
-  //@DefaultConfig(sharedRoot = false)
-  //private Path defaultConfig;
-
   private String instance;
   private String zkServers;
   private String password;
