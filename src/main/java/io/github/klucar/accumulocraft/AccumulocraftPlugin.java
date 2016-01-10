@@ -8,7 +8,6 @@ import io.github.klucar.accumulocraft.guice.AccumulocraftModule;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.command.CommandManager;
-import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
@@ -42,12 +41,11 @@ public class AccumulocraftPlugin {
   public void onPreInit(GamePreInitializationEvent event) {
     logger.info("Pre-Init");
     config = new Configuration();
-
     injector.injectMembers(config);
     config.initialize();
     this.pluginInjector = injector.createChildInjector(new AccumulocraftModule(config));
 
-    configureCommands();
+    configureCommands( this.pluginInjector );
   }
 
   @Listener
@@ -83,7 +81,7 @@ public class AccumulocraftPlugin {
     logger.info("Server shutting down");
   }
 
-  private void configureCommands(){
+  private void configureCommands(Injector injector){
     logger.info("Configuring Accumulocraft Commands");
 
     CommandManager mgr = game.getCommandManager();
@@ -95,11 +93,10 @@ public class AccumulocraftPlugin {
 
     mgr.register(this, tipCommandSpec, "tip", "tip", "tip");
 
-    CommandExecutor tablesCommand = new TablesCommand();
-    this.pluginInjector.injectMembers(tablesCommand);
+
     CommandSpec tablesCommandSpec = CommandSpec.builder()
       .description(Text.of("Display Accumulo Tables"))
-      .executor( tablesCommand )
+      .executor( injector.getInstance(TablesCommand.class) )
       .build();
 
     mgr.register(this, tablesCommandSpec, "tables", "tables", "tables");
