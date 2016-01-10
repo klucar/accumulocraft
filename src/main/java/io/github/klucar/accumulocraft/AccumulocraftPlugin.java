@@ -8,6 +8,7 @@ import io.github.klucar.accumulocraft.guice.AccumulocraftModule;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.command.CommandManager;
+import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
@@ -16,7 +17,7 @@ import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.plugin.Plugin;
-import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.Text;
 
 /**
  * A simple sponge plugin
@@ -33,15 +34,19 @@ public class AccumulocraftPlugin {
   @Inject
   Injector injector;
 
+  Injector pluginInjector;
+
   private Configuration config;
 
   @Listener
   public void onPreInit(GamePreInitializationEvent event) {
     logger.info("Pre-Init");
     config = new Configuration();
+
     injector.injectMembers(config);
-    injector.createChildInjector(new AccumulocraftModule(config));
     config.initialize();
+    this.pluginInjector = injector.createChildInjector(new AccumulocraftModule(config));
+
     configureCommands();
   }
 
@@ -84,15 +89,17 @@ public class AccumulocraftPlugin {
     CommandManager mgr = game.getCommandManager();
     // Perform initialization tasks here
     CommandSpec tipCommandSpec = CommandSpec.builder()
-      .description(Texts.of("Get a random tip."))
+      .description(Text.of("Get a random tip."))
       .executor(new TipCommand())
       .build();
 
     mgr.register(this, tipCommandSpec, "tip", "tip", "tip");
 
+    CommandExecutor tablesCommand = new TablesCommand();
+    this.pluginInjector.injectMembers(tablesCommand);
     CommandSpec tablesCommandSpec = CommandSpec.builder()
-      .description(Texts.of("Display Accumulo Tables"))
-      .executor(new TablesCommand())
+      .description(Text.of("Display Accumulo Tables"))
+      .executor( tablesCommand )
       .build();
 
     mgr.register(this, tablesCommandSpec, "tables", "tables", "tables");

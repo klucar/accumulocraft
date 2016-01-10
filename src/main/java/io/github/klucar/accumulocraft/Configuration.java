@@ -3,11 +3,14 @@ package io.github.klucar.accumulocraft;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.apache.accumulo.minicluster.MiniAccumuloCluster;
-import org.apache.accumulo.minicluster.MiniAccumuloConfig;
+import org.apache.accumulo.minicluster.impl.MiniAccumuloClusterImpl;
+import org.apache.accumulo.minicluster.impl.MiniAccumuloConfigImpl;
 import org.slf4j.Logger;
 import org.spongepowered.api.config.DefaultConfig;
 
@@ -47,7 +50,6 @@ public class Configuration {
       logger.info("Initializing Configuration");
       // Load the config files
       CommentedConfigurationNode config = configManager.load();
-      logger.info("config: {}", config);
       this.setZkServers(config.getNode(ZK_NODE).getString(ZK_DEFAULT));
       this.setInstance(config.getNode(INSTANCE_NODE).getString(INSTANCE_DEFAULT));
       this.setPassword(config.getNode(PASSWORD_NODE).getString(PASSWORD_DEFAULT));
@@ -59,9 +61,21 @@ public class Configuration {
         logger.info("Starting MiniAccumuloCluster");
         File tempFile = Files.createTempDirectory("miniaccumulocraft").toFile();
         logger.info("tempFile: {}", tempFile);
-        MiniAccumuloConfig miniConfig = new MiniAccumuloConfig(tempFile, this.getPassword());
-        miniConfig.setInstanceName(this.getInstance());
-        MiniAccumuloCluster cluster = new MiniAccumuloCluster(miniConfig);
+        logger.info("classpath: {}", System.getProperty("java.class.path"));
+
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        URL[] urls = ((URLClassLoader)cl).getURLs();
+        for(URL url: urls){
+          logger.info(url.getFile());
+        }
+
+        MiniAccumuloConfigImpl confImpl = new MiniAccumuloConfigImpl(tempFile, this.getPassword());
+        String cp = System.getenv("CLASSPATH");
+        logger.info("MiniAccumulo classpath: {}", cp);
+        String[] cpItems = cp.split(":");
+        confImpl.setClasspathItems(cpItems);
+        confImpl.setInstanceName(this.getInstance());
+        MiniAccumuloClusterImpl cluster = new MiniAccumuloClusterImpl(confImpl);
         cluster.start();
         this.setZkServers(cluster.getZooKeepers());
         this.setInstance(cluster.getInstanceName());
